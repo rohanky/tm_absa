@@ -159,7 +159,7 @@ print(len(vocab_unique))
 
 #Create a 3 bit binary input for the first part of the split sentence representing the position of positive, negative and no sentiment tokens.
 def binarization_additionalInfo1(data4):
-    feature_set = np.zeros([4728, 3], dtype=np.uint8)
+    feature_set = np.zeros([len(data4), 3], dtype=np.uint8)
     tnum=0
     for t in data4:
         if 'positive' in t:
@@ -174,7 +174,7 @@ def binarization_additionalInfo1(data4):
 
 #Create a 3 bit binary input for the second part of the split sentence representing the position of positive, negative and no sentiment tokens.
 def binarization_additionalInfo2(data4):
-    feature_set = np.zeros([4728, 3], dtype=np.uint8)
+    feature_set = np.zeros([len(data4), 3], dtype=np.uint8)
     tnum=0
     for t in data4:
         if 'positive' in t:
@@ -189,7 +189,7 @@ def binarization_additionalInfo2(data4):
 
 #Create a Bag of Words (BOW) for the input sentence and the target word.
 def binarization_text(data4):
-    feature_set = np.zeros([4728, len(vocab_unique)], dtype=np.uint8)
+    feature_set = np.zeros([len(data4), len(vocab_unique)], dtype=np.uint8)
     tnum=0
     for t in data4:
         for w in t:
