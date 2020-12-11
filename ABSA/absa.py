@@ -12,32 +12,21 @@ from nltk.stem import PorterStemmer
 from nltk import FreqDist 
 from nltk.tokenize import RegexpTokenizer
 import numpy as np
-from sklearn.model_selection import train_test_split
 import sys
 sys.path.append('../pyTsetlinMachineParallel/')
 from tm import MultiClassTsetlinMachine
-from tm import MultiClassConvolutionalTsetlinMachine2D
 nltk.download('wordnet')
 from time import time 
 stop_words = set(stopwords.words('english'))
 tokenizerR = RegexpTokenizer(r'\w+')
 from numpy import save
-from nltk.stem import WordNetLemmatizer 
 
-from keras.utils.np_utils import to_categorical
 
-#%%%%%%%%%%%%%Read the Sentiment Score File%%%%%%%%%%%%%%%%%
+#%%%%%%%%%%%%%Read the Sentiment Score Binary File%%%%%%%%%%%%%%%%%
 
-dfSenti = pd.read_csv('rest14Senti.csv', header = None)    #For Laptop dataset change this to 'laptopSenti.csv'
-sentiTemp1 = dfSenti.iloc[:,0:3].values
-sentiTemp2 = dfSenti.iloc[:,3:6].values
-sentiTemp1 = np.reshape(sentiTemp1, len(sentiTemp1))
-sentiTemp2 = np.reshape(sentiTemp2, len(sentiTemp2))
+dfSenti = pd.read_csv('restSCBinary.csv', header = None)    #For Laptop dataset change this to 'laptopSCBinary.csv'
+restSC = dfSenti.iloc[:,:].values
 
-#Convert the sentiment label into 3 bit binary input
-X_senti1 = to_categorical(sentiTemp1, num_classes=3)
-X_senti2  = to_categorical(sentiTemp2, num_classes=3)
-X_senti = np.concatenate((sentiTemp1, sentiTemp2), axis = 1)
 
 
 alpha = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
@@ -53,8 +42,8 @@ y = np.reshape(label, len(label))
 
 
 #%%%%%%%%%%%%% Read the Restaurant Original File to create the Vocabulary %%%%%%%%%%%%%%%%%
-df1 = pd.read_csv('rest.csv')    #For Laptop dataset change this to 'laptop.csv'
-textOrig = df.iloc[:,1:2].values
+dfOriginal = pd.read_csv('rest.csv')    #For Laptop dataset change this to 'laptop.csv'
+textOrig = dfOriginal.iloc[:,1:2].values
 
 
 #%%%%%%%%%%%%% Read the Opinion Lexicon File %%%%%%%%%%%%%%%%%
@@ -120,7 +109,6 @@ def lexicon_based(data1):
 lexicon_input = lexicon_based(input_text)
 lexicon_input1 = lexicon_based(input_text1)
 lexicon_input2 = lexicon_based(input_text2)
-
 lexicon_target = lexicon_based(input_target)
 
 # Use PortStemmet to stem the words in the sentence
@@ -169,7 +157,7 @@ vocab_unique = full_token_fil
 print(len(vocab_unique))
 
 
-#Create a 3 bit binary input for the first part of the split sentence representing the position of positive, negative and neutral tokens.
+#Create a 3 bit binary input for the first part of the split sentence representing the position of positive, negative and no sentiment tokens.
 def binarization_additionalInfo1(data4):
     feature_set = np.zeros([4728, 3], dtype=np.uint8)
     tnum=0
@@ -184,7 +172,7 @@ def binarization_additionalInfo1(data4):
     return feature_set
 
 
-#Create a 3 bit binary input for the second part of the split sentence representing the position of positive, negative and neutral tokens.
+#Create a 3 bit binary input for the second part of the split sentence representing the position of positive, negative and no sentiment tokens.
 def binarization_additionalInfo2(data4):
     feature_set = np.zeros([4728, 3], dtype=np.uint8)
     tnum=0
@@ -201,7 +189,7 @@ def binarization_additionalInfo2(data4):
 
 #Create a Bag of Words (BOW) for the input sentence and the target word.
 def binarization_text(data4):
-    feature_set = np.zeros([4728, 2500], dtype=np.uint8)
+    feature_set = np.zeros([4728, len(vocab_unique)], dtype=np.uint8)
     tnum=0
     for t in data4:
         for w in t:
@@ -223,17 +211,17 @@ X_final1 = np.concatenate((X_text, X_target), axis = 1)
 X_final2 = np.concatenate((Loc_vec1, Loc_vec2), axis = 1)
 
 X_final3 = np.concatenate((X_final1, X_final2), axis = 1)
-X_final4 = np.concatenate((X_final3, X_senti), axis = 1)
+X_final4 = np.concatenate((X_final3, restSC), axis = 1)
 
 #Split training and testing samples
-X_train = X_final4[0:3608,:]  #For Laptop dataset change this to 3608 to 2328
-X_test  = X_final4[3608:,:]	#For Laptop dataset change this to 3608 to 2328
-ytrain = y[0:3608]	#For Laptop dataset change this to 3608 to 2328
-ytest = y[3608:]	#For Laptop dataset change this to 3608 to 2328
+X_train = X_final4[0:3608,:]  #For Laptop dataset change this from 3608 to 2328
+X_test  = X_final4[3608:,:]	#For Laptop dataset change this from 3608 to 2328
+ytrain = y[0:3608]	#For Laptop dataset change this from 3608 to 2328
+ytest = y[3608:]	#For Laptop dataset change this from 3608 to 2328
 
 
 #%%%%%%%%%%%%%%%%%% Initialize Tsetlin Machine %%%%%%%%%%%%%%%%%%%%%%%
-tm1 =  MultiClassTsetlinMachine(700, 90,15, weighted_clauses=True)  #number of clause= 700, T = 90 and s = 15
+tm1 =  MultiClassTsetlinMachine(700, 90*100,15, weighted_clauses=True)  #number of clause= 700, T = 90*100 and s = 15
 #tm1.fit(X_train, ytrain, epochs=0)
 print("\nTraining Classification Layer...")
 
